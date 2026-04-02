@@ -17,8 +17,8 @@ Use this skill when:
 | Input | Example |
 |---|---|
 | Entity name | `Musician` |
-| Type location | `/src/types/musician.ts` |
-| Output file | `/src/lib/mock-data/musicians.ts` |
+| Type location | `/lib/types.ts` (single file — all types here) |
+| Output file | `/lib/mock/musicians.ts` |
 | Number of entries | 6–10 for a browsable list; 1–3 for detail-only |
 | Special requirements | "include at least one Jazz and one Classical musician" |
 
@@ -52,12 +52,13 @@ Use this skill when:
 ## Step-by-Step Procedure
 
 ### Step 1 — Read the type
-- Open `/src/types/[entity].ts`
+- Open `/lib/types.ts` and find the relevant interface
 - List every field, its type, and whether it is optional
 
 ### Step 2 — Check for existing data
-- If the file already exists, append new entries — do not overwrite
+- Check `/lib/mock/[entity].ts` — if it exists, append; do not overwrite
 - Check for ID collisions before adding
+- Ensure the new entity is re-exported from `/lib/mock/index.ts`
 
 ### Step 3 — Generate entries
 - Write 6–10 entries for list screens, fewer for detail-only
@@ -66,7 +67,7 @@ Use this skill when:
 
 ### Step 4 — Export with explicit type annotation
 ```ts
-import type { Musician } from "@/types/musician";
+import type { Musician } from "@/lib/types";
 
 export const MOCK_MUSICIANS: Musician[] = [
   {
@@ -78,6 +79,11 @@ export const MOCK_MUSICIANS: Musician[] = [
 ];
 ```
 
+Add or confirm the export in `/lib/mock/index.ts`:
+```ts
+export { MOCK_MUSICIANS } from "./musicians";
+```
+
 ### Step 5 — Verify
 - TypeScript must not show errors on this file
 - Each entry should feel like a real listing a demo audience would believe
@@ -86,12 +92,14 @@ export const MOCK_MUSICIANS: Musician[] = [
 
 ## Output Checklist
 
-- [ ] File is at `/src/lib/mock-data/[entity].ts`
+- [ ] File is at `/lib/mock/[entity].ts` (no `src/` prefix)
 - [ ] Export name is `MOCK_[ENTITIES]` (screaming snake case)
+- [ ] Re-exported from `/lib/mock/index.ts`
 - [ ] Explicit type annotation on the exported array
 - [ ] No TypeScript errors
-- [ ] All IDs are unique
+- [ ] All IDs are unique and follow `"x-001"` format
 - [ ] All user-facing strings are in Japanese
+- [ ] Venue names and neighborhoods are Tokyo-realistic (see `agent-japan-market-realism.md`)
 - [ ] At least one entry has an empty/null optional field to test edge cases
 - [ ] File list summary provided
 
@@ -100,20 +108,30 @@ export const MOCK_MUSICIANS: Musician[] = [
 ## Example: Musician Mock Data Skeleton
 
 ```ts
-import type { Musician } from "@/types/musician";
+import type { Musician } from "@/lib/types";
 
 export const MOCK_MUSICIANS: Musician[] = [
   {
     id: "m-001",
+    slug: "tanaka-makoto",
     name: "田中 誠",
-    genres: ["Jazz", "Bossa Nova"],
-    instruments: ["Piano"],
-    neighborhood: "渋谷区",
-    pricePerHour: 25000,
-    availableThisWeek: true,
+    nameKana: "タナカ マコト",
+    tagline: "ホテルラウンジ・企業イベントを得意とするジャズピアニスト",
     bio: "東京を拠点に活動するジャズピアニスト。企業イベントやホテルラウンジの演奏を得意とする。",
+    instruments: ["piano"],
+    genres: ["jazz", "bossa_nova"],
+    ensembleType: "ソロ",
+    neighborhood: "港区",
+    travelAreas: ["港区", "渋谷区"],
+    pricePerHour: 25000,
+    availabilityStatus: "available_today",
+    availabilityLabel: "急ぎ対応可",
     bookingCount: 47,
+    suitableEvents: ["corporate", "hotel_lounge"],
+    photoUrl: null,
     mediaUrl: null,
+    isCurated: true,
+    tags: ["企業イベント向け"],
   },
   // ...
 ];

@@ -36,6 +36,7 @@ Run through this checklist for every screen or component you review:
 ### Japanese Copy
 - [ ] All user-facing text is in Japanese
 - [ ] Terms match the glossary in `/docs/windsurf/project-memory.md`
+- [ ] Copy feels natural for Tokyo — not machine-translated (see `agent-japan-market-realism.md`)
 - [ ] No English text visible to end users
 - [ ] No lorem ipsum
 - [ ] Labels are appropriately short for mobile
@@ -47,8 +48,8 @@ Run through this checklist for every screen or component you review:
 - [ ] Form inputs have associated `<label>` elements
 
 ### Data / Mock
-- [ ] Mock data matches the types in `/src/types/`
-- [ ] No hardcoded strings that belong in mock data
+- [ ] Mock data matches the types in `/lib/types.ts`
+- [ ] No hardcoded IDs or tokens outside of `/lib/mock/` (see `skill-wire-prototype-state.md`)
 - [ ] No real API calls or environment variable references to third-party services
 
 ### Component Quality
@@ -82,3 +83,4 @@ For each review, output:
 - Do not add out-of-scope features (auth, payments, chat, etc.) as part of a fix
 - Do not change the tech stack or install new libraries
 - Do not re-open closed design questions — flag them as "future phase" if relevant
+- For flow/navigation issues found during review, use `skill-flow-consistency-audit.md` as the fix template

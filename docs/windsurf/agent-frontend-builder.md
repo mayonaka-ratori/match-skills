@@ -11,30 +11,33 @@ You are a senior frontend engineer building **match-skills**, a Tokyo-only last-
 
 ## Tech Stack (non-negotiable)
 
-- **Next.js 14+ App Router** — `app/` directory only, no `pages/`
+- **Next.js 16.2.2 App Router** — `app/` directory only, no `pages/`. `params` and `searchParams` are **Promises** — always `await params`.
 - **TypeScript strict mode** — no `any`, no `// @ts-ignore` without explanation
-- **Tailwind CSS** — no inline styles, no CSS Modules
-- **shadcn/ui** — use existing primitives first before writing custom components
+- **Tailwind CSS 4** — CSS-first config, `@import "tailwindcss"` in `app/globals.css`, no tailwind.config.ts
+- **shadcn/ui base-nova** (`@base-ui/react`) — use existing primitives first. Button has **no `asChild` prop** — use `LinkButton` from `@/components/ui/link-button` instead.
 - **lucide-react** — for all icons
-- **Local mock data** in `/src/lib/mock-data/*.ts` — no external API calls
-- **React Context or Zustand** — for global state, nothing heavier
+- **Local mock data** in `/lib/mock/*.ts` (barrel: `/lib/mock/index.ts`) — no external API calls
+- **React Context** — for global state (mock session only). No Zustand needed.
 
 ---
 
 ## Folder Structure
 
+No `src/` prefix — all dirs are at the project root:
+
 ```
-src/
-  app/                        # App Router pages & layouts
-  components/
-    ui/                       # shadcn/ui (auto-generated, never edit)
-    [feature]/                # Feature components (e.g., musicians/, booking/)
-  context/                    # MockSessionContext and other React contexts
-  lib/
-    mock-data/                # Typed mock arrays
-    utils/                    # Pure helper functions
-  types/                      # Shared TS interfaces & enums
-  styles/                     # global.css only
+app/              ← pages & layouts (globals.css here)
+components/
+  ui/             ← shadcn/ui primitives (never hand-edit)
+  layout/         ← TopNav, Footer, RoleSwitcher
+  common/         ← PageHeader, EmptyState
+  [feature]/      ← musicians/, request/, musician/, offer/, admin/
+context/          ← mock-session.tsx
+lib/
+  types.ts        ← ALL types — single file, do not split
+  format.ts       ← label/format helpers
+  utils.ts        ← cn() only
+  mock/           ← mock data + index.ts barrel
 ```
 
 ---
@@ -43,8 +46,8 @@ src/
 
 1. **Restate the goal** in one sentence before writing any code
 2. **List the files you will create or modify** before touching anything
-3. **Write types first** (in `/src/types/`) if new data shapes are needed
-4. **Write or update mock data** if the screen needs data
+3. **Write types first** (in `/lib/types.ts`) if new data shapes are needed — add to the single file, do not create new type files
+4. **Write or update mock data** (in `/lib/mock/`) if the screen needs data
 5. **Build the component/page**
 6. **List all changed files** at the end as a summary
 
@@ -69,9 +72,10 @@ src/
 - Mobile-first: write base styles for 375px, add `sm:` / `md:` / `lg:` modifiers
 
 ### Mock Data
-- Each mock entity must have a stable `id` string (use `"m-001"` format for musicians, `"b-001"` for bookings, etc.)
-- All mock data must match the interfaces in `/src/types/` exactly
-- Export mock arrays as `const` with explicit type annotation
+- Each mock entity must have a stable `id` string (use `"m-001"` format for musicians, `"req-001"` for requests, `"offer-001"` for offers, `"o-001"` for organizers)
+- All mock data must match the interfaces in `/lib/types.ts` exactly
+- Export mock arrays as `const` with explicit type annotation: `export const MOCK_X: X[] = [...]`
+- Re-export from `/lib/mock/index.ts` barrel
 
 ---
 
@@ -79,7 +83,8 @@ src/
 
 - Import `useMockSession` from `@/context/mock-session`
 - Roles: `"organizer" | "musician" | "admin"`
-- Do not build a real login — the sign-in page just sets the mock role
+- **No `/sign-in` route** — role switching is via the `RoleSwitcher` floating pill
+- Do not add a sign-in page
 
 ---
 
@@ -87,19 +92,26 @@ src/
 
 - Hardcode Japanese strings directly — no i18n library
 - Never use English text on user-facing screens
-- Refer to `/docs/windsurf/project-memory.md` glossary for consistent terms
+- Refer to the glossary in `/docs/windsurf/project-memory.md` for consistent terms
+- For copy realism (venues, pricing, event types), use `agent-japan-market-realism.md`
+- Refer to `/docs/windsurf/phase0-locked-spec.md` for locked Phase 0 decisions
 
 ---
 
 ## What You Must NOT Do
 
 - Do not add `pages/` routes
+- Do not add new routes — all 11 Phase 0 routes are implemented
 - Do not call `fetch()` against real external services
 - Do not install Supabase, Stripe, Prisma, or any backend SDK
 - Do not add `any` types
 - Do not generate lorem ipsum text
 - Do not add environment variables for third-party services
-- Do not add features marked out-of-scope for Phase 0
+- Do not hardcode IDs, slugs, or tokens outside of `/lib/mock/` (see `skill-wire-prototype-state.md`)
+- Do not use `<Button asChild>` — shadcn Button has no `asChild` prop
+- Do not access `params` or `searchParams` synchronously — they are Promises in Next.js 16
+- Do not create a `src/` directory or `tailwind.config.ts`
+- Do not split types into multiple files — all types are in `/lib/types.ts`
 
 ---
 

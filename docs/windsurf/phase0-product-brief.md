@@ -44,17 +44,23 @@ A curated, availability-first platform where Tokyo-based event organizers can qu
 
 ---
 
-## Phase 0 Deliverables (Clickable Prototype)
+## Phase 0 Deliverables — COMPLETE ✓
 
-| Screen | Notes |
-|---|---|
-| Home / Discovery | Availability filter + musician card grid |
-| Musician Profile | Bio, media, price, availability badge |
-| Booking Request Form | Organizer fills in event details (mock submit) |
-| Booking Confirmation | Mock success screen |
-| Musician Dashboard | Musician sees mock upcoming bookings |
-| Admin Roster | Admin views/curates musician list |
-| Sign-in page | Static mock — no real auth |
+All 11 routes implemented and navigable:
+
+| Route | Screen | Role |
+|---|---|---|
+| `/` | Landing page | organizer |
+| `/request/new` | Multi-step request form | organizer |
+| `/request/review` | Request confirmation | organizer |
+| `/matches/[requestId]` | Candidate list with filters | organizer |
+| `/musicians/[slug]` | Musician detail + sticky booking CTA | organizer |
+| `/booking/confirm/[requestId]/[musicianId]` | Booking confirmation | organizer |
+| `/musician/onboarding` | Musician registration form | musician |
+| `/musician/availability` | 7×3 availability grid editor | musician |
+| `/offer/[token]` | Offer YES/HOLD/NO response | musician |
+| `/admin/requests` | Admin request list + status overview | admin |
+| `/admin/requests/[id]` | Admin request detail + shortlist panel | admin |
 
 ---
 
@@ -68,7 +74,8 @@ A curated, availability-first platform where Tokyo-based event organizers can qu
 - Notifications (email, SMS, push)
 - Reviews / ratings
 - Multi-city support
-- Musician self-onboarding flow
+- File upload for photos/media (mock: Unsplash URLs only)
+- Negotiation / counter-offer (offer flow is YES/HOLD/NO only)
 
 ---
 
@@ -76,13 +83,13 @@ A curated, availability-first platform where Tokyo-based event organizers can qu
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 14+ with App Router |
+| Framework | Next.js 16.2.2 with App Router |
 | Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS |
-| Components | shadcn/ui |
-| Data | Local mock data (`/src/lib/mock-data/`) — no DB |
-| Auth | Hardcoded mock session context — no real auth |
-| State | React Context or Zustand (lightweight) |
+| Styling | Tailwind CSS 4 (CSS-first config, no tailwind.config.ts) |
+| Components | shadcn/ui (base-nova / @base-ui/react) |
+| Data | Local mock data (`/lib/mock/`) — no DB, no `src/` prefix |
+| Auth | `MockSessionContext` — role switcher floating pill, no sign-in page |
+| State | React Context only |
 | Icons | lucide-react |
 | Fonts | Inter (Latin) + Noto Sans JP (Japanese) |
 
@@ -101,13 +108,20 @@ A curated, availability-first platform where Tokyo-based event organizers can qu
 - Swap mock data → Supabase tables (schema mirrors mock types exactly)
 - Swap mock auth → Supabase Auth (roles: organizer, musician, admin)
 - Swap mock booking → Supabase row + Stripe payment intent
-- Mock data types in `/src/types/` become the single source of truth for DB schema
+- `/lib/types.ts` is the single source of truth for DB schema
 
 ---
 
-## Open Questions (to resolve before Phase 1)
+## Open Questions — Resolved by Phase 0 Implementation
 
-1. Booking model: instant confirm vs. musician-accepts flow?
-2. Pricing model: flat fee, hourly, or both?
-3. Musician onboarding: invite-only or application form?
-4. Admin tools: internal only or a proper dashboard product?
+1. **Booking model** → **request-first**: organizer submits request → admin shortlists → offer sent to musician → musician responds YES/HOLD/NO. No instant confirm.
+2. **Pricing model** → **hourly** (`pricePerHour` JPY) with optional `priceNote`. Estimated total shown at booking confirmation. No flat fee in Phase 0.
+3. **Musician onboarding** → **self-service form** at `/musician/onboarding` (mock submit). Admin reviews before listing (implied by `isCurated` flag; no admin approval UI yet).
+4. **Admin tools** → **internal only** in Phase 0: request list + request detail + shortlist panel. No public-facing admin dashboard.
+
+## Remaining Open Questions (for Phase 1)
+
+1. Payment timing: deposit upfront vs. post-event invoice?
+2. Admin musician approval workflow: email notification or dashboard action?
+3. Multi-musician booking: can one request be filled by an ensemble vs. solo?
+4. Organizer repeat bookings: should past bookings be surfaced to speed re-booking?
