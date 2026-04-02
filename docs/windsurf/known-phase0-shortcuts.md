@@ -8,16 +8,18 @@
 ## Navigation & Routing
 
 ### Hardcoded requestId in booking CTA
-- **Where:** `app/musicians/[slug]/page.tsx` line ~244
-- **Shortcut:** `href={"/booking/confirm/req-004/${musician.id}"}` — always uses `req-004`
-- **Why:** Phase 0 has no session, so there is no way to know which request the organizer is currently browsing for
-- **Phase 1 fix:** Read the active requestId from the URL (pass via query param from `/matches/[requestId]`) or from session
+- **Where:** `app/musicians/[slug]/page.tsx`
+- **Shortcut (resolved Phase 0):** The fake `req-001` fallback has been removed. The page now operates in two modes:
+  - **Mode A** (`?requestId=` present): CTA → `/booking/confirm/${requestId}/${musician.id}` — organizer flow, label「この演奏家で予約を申し込む」
+  - **Mode B** (no `?requestId=`): CTA → `/request/new?eventType=<suitableEvents[0]>&musician=<slug>` — standalone entry, label「この演奏家でリクエストを始める」; `RequestFormWizard` pre-selects the event type chip and shows a dismissible musician hint banner
+- **Query params introduced:** `?eventType=` and `?musician=` on `/request/new`
+- **Phase 1 fix:** requestId will always be present (real session); remove Mode B branch and hint banner
 
 ### Hardcoded mock request on review page
-- **Where:** `app/request/review/page.tsx` line ~15
-- **Shortcut:** `MOCK_REQUESTS.find((r) => r.id === "req-004")` — always shows req-004 as the "just submitted" request
-- **Why:** The `RequestFormWizard` submits nothing; there is no created request to reference
-- **Phase 1 fix:** Create a real BookingRequest row in Supabase on form submit, redirect with the new `requestId`
+- **Where:** `app/request/review/page.tsx`
+- **Shortcut:** ~~Always showed req-004~~ — **resolved in Phase 0**: `RequestFormWizard` now writes a `RequestDraft` to `sessionStorage` on submit via `lib/request-draft.ts`; the review page reads the draft and renders live user input. Falls back to mock req-004 (with a subtle "サンプルデータ" notice) when no draft is present (direct navigation, demo scenario entry).
+- **Remaining shortcut:** The candidates CTA still links to `req-004` even when showing a real draft (no real `requestId` exists until Supabase insert).
+- **Phase 1 fix:** Create a real BookingRequest row in Supabase on form submit, redirect with the new `requestId`; remove `lib/request-draft.ts` entirely.
 
 ### Back link on musician detail hardcodes `/request/review`
 - **Where:** `app/musicians/[slug]/page.tsx` line ~49

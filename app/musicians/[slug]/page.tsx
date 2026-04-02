@@ -32,11 +32,21 @@ export default async function MusicianDetailPage({
   const backHref = requestId ? `/matches/${requestId}` : "/";
   const backLabel = requestId ? "候補一覧に戻る" : "トップに戻る";
 
-  // Booking CTA target: requires requestId — fall back to review so demo never 404s
-  // TODO Phase 1: requestId always present (comes from real session)
-  const confirmHref = requestId
+  // Mode A: organizer arrived via /matches/[requestId] — go straight to booking confirm
+  // Mode B: standalone / direct-entry — start the organizer flow from /request/new
+  //         prefill eventType from musician.suitableEvents[0] and carry musician slug as hint
+  // TODO Phase 1: requestId always present (comes from real session); remove Mode B branch
+  const hasRequest = Boolean(requestId);
+  const prefillEventType = musician.suitableEvents[0] ?? null;
+  const requestNewHref = [
+    `/request/new`,
+    prefillEventType ? `?eventType=${prefillEventType}&musician=${musician.slug}` : `?musician=${musician.slug}`,
+  ].join("");
+  const ctaHref = hasRequest
     ? `/booking/confirm/${requestId}/${musician.id}`
-    : `/booking/confirm/req-001/${musician.id}`;
+    : requestNewHref;
+  const ctaLabel = hasRequest ? "この演奏家で予約を申し込む" : "この演奏家でリクエストを始める";
+  const ctaSubLabel = hasRequest ? null : "まずはイベント情報を入力してください";
 
   return (
     <div className="pb-28">
@@ -254,13 +264,18 @@ export default async function MusicianDetailPage({
               {formatPricePerHour(musician.pricePerHour)}
             </p>
           </div>
-          <LinkButton
-            href={confirmHref}
-            size="lg"
-            className="shrink-0 min-h-[44px]"
-          >
-            予約を申し込む
-          </LinkButton>
+          <div className="flex shrink-0 flex-col items-end gap-0.5">
+            {ctaSubLabel && (
+              <p className="text-xs text-muted-foreground">{ctaSubLabel}</p>
+            )}
+            <LinkButton
+              href={ctaHref}
+              size="lg"
+              className="min-h-[44px]"
+            >
+              {ctaLabel}
+            </LinkButton>
+          </div>
         </div>
       </div>
     </div>

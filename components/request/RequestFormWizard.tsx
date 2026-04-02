@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowRight, ChevronLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { EventType, Genre } from "@/lib/types";
 import { labelEventType, labelGenre } from "@/lib/format";
+import { saveRequestDraft } from "@/lib/request-draft";
+import { MOCK_MUSICIANS } from "@/lib/mock";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -163,9 +165,25 @@ function Field({
 
 export function RequestFormWizard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [musicianHint, setMusicianHint] = useState<string | null>(null);
+
+  // TODO Phase 1: remove this block — eventType and musician will come from real session
+  useEffect(() => {
+    const rawEventType = searchParams.get("eventType");
+    if (rawEventType && (EVENT_TYPES as readonly string[]).includes(rawEventType)) {
+      setForm((prev) => ({ ...prev, eventType: rawEventType as EventType }));
+    }
+    const musicianSlug = searchParams.get("musician");
+    if (musicianSlug) {
+      const found = MOCK_MUSICIANS.find((m) => m.slug === musicianSlug);
+      if (found) setMusicianHint(found.name);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function update<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -205,12 +223,41 @@ export function RequestFormWizard() {
   }
 
   function handleSubmit() {
-    // TODO Phase 1: POST to Supabase booking_requests table
+    // TODO Phase 1: POST to Supabase booking_requests table; remove saveRequestDraft call
+    saveRequestDraft({
+      eventType: form.eventType as EventType,
+      eventDate: form.eventDate,
+      eventTime: form.eventTime,
+      durationHours: form.durationHours as number,
+      venueNeighborhood: form.venueNeighborhood,
+      venueName: "",
+      preferredGenres: form.preferredGenres,
+      budgetPerHour: form.budgetPerHour === "" ? null : (form.budgetPerHour as number),
+      notes: form.notes.trim() || null,
+    });
     router.push("/request/review");
   }
 
   return (
     <div>
+      {/* Musician hint banner — shown when arriving from a musician detail page (standalone mode) */}
+      {/* TODO Phase 1: replace with real shortlist pre-selection tied to Supabase session */}
+      {musicianHint && (
+        <div className="mb-5 flex items-start justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
+          <p className="text-sm text-foreground">
+            <span className="font-medium">{musicianHint}さん</span>を候補に含めてリクエストを送ります
+          </p>
+          <button
+            type="button"
+            onClick={() => setMusicianHint(null)}
+            className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label="閉じる"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-2">
         <h1 className="text-2xl font-semibold tracking-tight">演奏家を探す</h1>

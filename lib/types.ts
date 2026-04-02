@@ -154,6 +154,24 @@ export interface MockUser {
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
+// RequestDraft — transient form state written to sessionStorage on submit
+// Shape mirrors BookingRequest minus server-assigned fields (id, organizerId, status, etc.)
+// TODO Phase 1: replace with a real BookingRequest row created via Supabase insert
+// ────────────────────────────────────────────────────────────────────────────────
+
+export interface RequestDraft {
+  eventType: EventType;
+  eventDate: string; // "YYYY-MM-DD"
+  eventTime: string; // "HH:MM"
+  durationHours: number;
+  venueNeighborhood: string;
+  venueName: string; // empty string when not collected by form
+  preferredGenres: Genre[];
+  budgetPerHour: number | null;
+  notes: string | null;
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
 // DemoScenario — pre-baked demo entry points (Phase 0 only)
 // ────────────────────────────────────────────────────────────────────────────────
 

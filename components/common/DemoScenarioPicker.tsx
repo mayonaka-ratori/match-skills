@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
 import { DEMO_SCENARIOS } from "@/lib/mock";
@@ -8,6 +8,8 @@ import { useMockSession } from "@/context/mock-session";
 import { labelEventType } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DemoScenario } from "@/lib/types";
+import { readRequestDraft } from "@/lib/request-draft";
+import { resetDemoState } from "@/lib/demo-reset";
 
 const EVENT_TYPE_COLORS = {
   corporate: "bg-blue-50 text-blue-700 border-blue-200",
@@ -18,8 +20,26 @@ const EVENT_TYPE_COLORS = {
 
 export function DemoScenarioPicker() {
   const [open, setOpen] = useState(false);
-  const { setRole } = useMockSession();
+  const [resetDone, setResetDone] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const { user, setRole } = useMockSession();
   const router = useRouter();
+
+  // Check on mount whether there is any state worth resetting
+  useEffect(() => {
+    setIsDirty(user.role !== "organizer" || readRequestDraft() !== null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleReset() {
+    resetDemoState(setRole);
+    setIsDirty(false);
+    setResetDone(true);
+    setTimeout(() => {
+      setResetDone(false);
+      router.push("/");
+    }, 900);
+  }
 
   function enter(scenario: DemoScenario) {
     setRole(scenario.startRole);
@@ -34,21 +54,41 @@ export function DemoScenarioPicker() {
     <div className="border-b border-border bg-muted/20">
       <div className="mx-auto max-w-5xl px-4">
         {/* Toggle row */}
-        <button
-          onClick={() => setOpen((v) => !v)}
-          className="flex w-full items-center justify-between py-3 text-left"
-          aria-expanded={open}
-        >
-          <span className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-primary/40 inline-block" />
-            デモシナリオから始める
-          </span>
-          {open ? (
-            <ChevronUp className="size-3.5 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="size-3.5 text-muted-foreground" />
-          )}
-        </button>
+        <div className="flex items-center justify-between py-3">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="flex flex-1 items-center gap-2 text-left"
+            aria-expanded={open}
+          >
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-primary/40 inline-block" />
+              デモシナリオから始める
+            </span>
+          </button>
+          <div className="flex items-center gap-3">
+            {isDirty && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-xs text-muted-foreground/70 transition-colors hover:text-foreground"
+              >
+                {resetDone ? "リセットしました" : "リセット"}
+              </button>
+            )}
+            <button
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label="デモシナリオの展開・折りたたみ"
+              className="text-muted-foreground"
+            >
+              {open ? (
+                <ChevronUp className="size-3.5" />
+              ) : (
+                <ChevronDown className="size-3.5" />
+              )}
+            </button>
+          </div>
+        </div>
 
         {/* Scenario cards */}
         {open && (
